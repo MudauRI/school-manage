@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4">Edit Student</h2>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label for="student_id" class="form-label">Student ID</label>
+                <input type="text" class="form-control" id="student_id" name="student_id" value="{{ student.student_id }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="full_name" class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="full_name" name="full_name" value="{{ student.full_name }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email" value="{{ student.email }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="program" class="form-label">Program</label>
+                <input type="text" class="form-control" id="program" name="program" value="{{ student.program }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="year" class="form-label">Year</label>
+                <input type="number" class="form-control" id="year" name="year" value="{{ student.year }}" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Student</button>
+            <a href="{{ url_for('manage_students') }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

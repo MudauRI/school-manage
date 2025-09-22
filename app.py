@@ -591,6 +591,7 @@ def update_document_status(doc_id):
     flash('Document status updated successfully!', 'success')
     return redirect(url_for('manage_documents'))
 
+
 @app.route('/admin/analytics')
 @admin_required
 def analytics():

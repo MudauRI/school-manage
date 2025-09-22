@@ -87,16 +87,16 @@ def init_db():
     if not admin_exists:
         hashed_password = generate_password_hash('admin123')
         c.execute("INSERT INTO users (username, password, role, full_name, email) VALUES (?, ?, ?, ?, ?)",
-                  ('admin', hashed_password, 'admin', 'System Administrator', 'admin@university.edu'))
+                  ('admin', hashed_password, 'admin', 'System Administrator', 'admin@izra.edu'))
         print("Admin user created successfully")
     else:
         print("Admin user already exists")
     
     # Insert some sample students
     sample_students = [
-        ('S1001', 'John Smith', 'john.smith@student.university.edu', 'Grade 12', 2023, '2000-05-15', '+1234567890', '123 Main St, City'),
-        ('S1002', 'Emma Johnson', 'emma.johnson@student.university.edu', 'Grade 12', 2023, '2001-02-20', '+1234567891', '456 Oak Ave, Town'),
-        ('S1003', 'Michael Brown', 'michael.brown@student.university.edu', 'Grade 11', 2022, '1999-11-10', '+1234567892', '789 Pine Rd, Village')
+        ('S1001', 'Rendani Mudau', 'rendani.mudau@student.izra.edu', 'Grade 12', 2023, '2000-05-15', '+1234567890', '123 Main St, City'),
+        ('S1002', 'Emma Sithi', 'emma.sithi@student.izra.edu', 'Grade 12', 2023, '2001-02-20', '+1234567891', '456 Oak Ave, Town'),
+        ('S1003', 'Michael Tshwika', 'michael.tswika@student.izra.edu', 'Grade 11', 2022, '1999-11-10', '+1234567892', '789 Pine Rd, Village')
     ]
     
     for student in sample_students:

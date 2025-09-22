@@ -1,0 +1,38 @@
+<!-- templates/submit_query.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4">Submit Query</h2>
+
+<div class="card">
+    <div class="card-header">
+        <h5>Query Form</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="query_type" class="form-label">Query Type</label>
+                    <select class="form-select" id="query_type" name="query_type" required>
+                        <option value="">Select Query Type</option>
+                        <option value="Result Inquiry">Result Inquiry</option>
+                        <option value="Document Issue">Document Issue</option>
+                        <option value="Technical Problem">Technical Problem</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-12">
+                    <label for="message" class="form-label">Message</label>
+                    <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Submit Query</button>
+            <a href="{{ url_for('student_dashboard') }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

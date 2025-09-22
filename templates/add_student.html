@@ -1,0 +1,47 @@
+<!-- templates/add_student.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4">Add New Student</h2>
+
+<div class="card">
+    <div class="card-header">
+        <h5>Student Information</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="student_id" class="form-label">Student ID</label>
+                    <input type="text" class="form-control" id="student_id" name="student_id" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="full_name" class="form-label">Full Name</label>
+                    <input type="text" class="form-control" id="full_name" name="full_name" required>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="program" class="form-label">Program</label>
+                    <input type="text" class="form-control" id="program" name="program" required>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="year" class="form-label">Year</label>
+                    <input type="number" class="form-control" id="year" name="year" min="2020" max="2030" required>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Add Student</button>
+            <a href="{{ url_for('manage_students') }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

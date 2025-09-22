@@ -1,0 +1,68 @@
+<!-- templates/manage_documents.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4">Manage Documents</h2>
+
+<div class="card">
+    <div class="card-header">
+        <h5>All Documents</h5>
+    </div>
+    <div class="card-body">
+        {% if documents %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Name</th>
+                        <th>Document Name</th>
+                        <th>Type</th>
+                        <th>Upload Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc in documents %}
+                    <tr>
+                        <td>{{ doc.student_id }}</td>
+                        <td>{{ doc.full_name }}</td>
+                        <td>{{ doc.doc_name }}</td>
+                        <td>{{ doc.doc_type }}</td>
+                        <td>{{ doc.upload_date[:10] }}</td>
+                        <td>
+                            <span class="badge bg-{% if doc.status == 'Approved' %}success{% elif doc.status == 'Rejected' %}danger{% else %}warning{% endif %}">
+                                {{ doc.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ url_for('download_document', doc_id=doc.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                                <form method="POST" action="{{ url_for('update_document_status', doc_id=doc.id) }}" class="d-inline">
+                                    <input type="hidden" name="status" value="Approved">
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('update_document_status', doc_id=doc.id) }}" class="d-inline">
+                                    <input type="hidden" name="status" value="Rejected">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-center">No documents found.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

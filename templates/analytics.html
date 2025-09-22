@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Analytics Dashboard</h2>
+    <div>
+        <button class="btn btn-outline-primary btn-sm" onclick="exportData()">
+            <i class="fas fa-download me-1"></i> Export Report
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" onclick="printReport()">
+            <i class="fas fa-print me-1"></i> Print
+        </button>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Total Students</h6>
+                        <h3 class="mb-0">{{ total_students }}</h3>
+                    </div>
+                    <div>
+                        <i class="fas fa-users fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Total Results</h6>
+                        <h3 class="mb-0">{{ total_results }}</h3>
+                    </div>
+                    <div>
+                        <i class="fas fa-chart-bar fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Documents</h6>
+                        <h3 class="mb-0">{{ total_documents }}</h3>
+                    </div>
+                    <div>
+                        <i class="fas fa-file-alt fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Average Score</h6>
+                        <h3 class="mb-0">
+                            {% set total_percentage = 0 %}
+                            {% set count = 0 %}
+                            {% for dist in grade_distribution %}
+                                {% set total_percentage = total_percentage + dist.count %}
+                                {% set count = count + dist.count %}
+                            {% endfor %}
+                            {{ "%.1f"|format(total_percentage / count if count > 0 else 0) }}%
+                        </h3>
+                    </div>
+                    <div>
+                        <i class="fas fa-percentage fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Grade Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="gradeChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Students by Program</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="programChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Performance Trends by Term</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="trendsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Subject Performance Analysis</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="subjectChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Key Insights & Recommendations</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-lightbulb text-warning me-2"></i>Academic Insights</h6>
+                        <ul class="list-unstyled">
+                            {% set total_grades = 0 %}
+                            {% for grade in grade_distribution %}
+                                {% set total_grades = total_grades + grade.count %}
+                            {% endfor %}
+                            
+                            {% set high_performers = 0 %}
+                            {% for grade in grade_distribution if grade.grade in ['A', 'B'] %}
+                                {% set high_performers = high_performers + grade.count %}
+                            {% endfor %}
+                            
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                {{ "%.1f"|format((high_performers / total_grades * 100) if total_grades > 0 else 0) }}% of students are high performers (A-B grades)
+                            </li>
+                            
+                            {% if program_stats %}
+                            <li class="mb-2">
+                                <i class="fas fa-users text-info me-2"></i>
+                                {{ program_stats[0].program }} has the highest enrollment ({{ program_stats[0].student_count }} students)
+                            </li>
+                            {% endif %}
+                            
+                            {% if course_difficulty %}
+                            <li class="mb-2">
+                                <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                                {{ course_difficulty[0].course_name }} shows highest struggle rate ({{ "%.1f"|format(course_difficulty[0].struggle_rate) }}%)
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-bullseye text-primary me-2"></i>Recommendations</h6>
+                        <ul class="list-unstyled">
+                            {% if course_difficulty and course_difficulty[0].struggle_rate > 30 %}
+                            <li class="mb-2">
+                                <i class="fas fa-arrow-right text-primary me-2"></i>
+                                Consider additional support for {{ course_difficulty[0].course_name }}
+                            </li>
+                            {% endif %}
+                            <li class="mb-2">
+                                <i class="fas fa-arrow-right text-primary me-2"></i>
+                                Implement peer tutoring programs for struggling subjects
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-arrow-right text-primary me-2"></i>
+                                Regular progress monitoring for students with D/F grades
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-arrow-right text-primary me-2"></i>
+                                Celebrate high-performing students to maintain motivation
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+<script>
+// Grade Distribution Chart (Horizontal Bar Chart)
+const gradeCtx = document.getElementById('gradeChart').getContext('2d');
+const gradeChart = new Chart(gradeCtx, {
+    type: 'bar',
+    data: {
+        labels: [{% for grade in grade_distribution %}'{{ grade.grade }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Number of Students',
+            data: [{% for grade in grade_distribution %}{{ grade.count }}{% if not loop.last %},{% endif %}{% endfor %}],
+            backgroundColor: [
+                '#28a745', '#17a2b8', '#ffc107', '#6c757d', '#dc3545'
+            ],
+            borderColor: [
+                '#28a745', '#17a2b8', '#ffc107', '#6c757d', '#dc3545'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        indexAxis: 'y', // This makes the bars horizontal
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: {
+                beginAtZero: true
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            },
+            title: {
+                display: false
+            }
+        }
+    }
+});
+
+// Program Distribution Chart (Pie Chart)
+const programCtx = document.getElementById('programChart').getContext('2d');
+const programChart = new Chart(programCtx, {
+    type: 'pie',
+    data: {
+        labels: [{% for program in program_stats %}'{{ program.program or "Unassigned" }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            data: [{% for program in program_stats %}{{ program.student_count }}{% if not loop.last %},{% endif %}{% endfor %}],
+            backgroundColor: [
+                '#007bff', '#28a745', '#17a2b8', '#ffc107', '#dc3545'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Trends Chart (Line Chart)
+const trendsCtx = document.getElementById('trendsChart').getContext('2d');
+const trendsChart = new Chart(trendsCtx, {
+    type: 'line',
+    data: {
+        labels: [{% for stat in semester_stats %}'{{ stat.semester }} {{ stat.academic_year }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Average Performance',
+            data: [{% for stat in semester_stats %}{{ stat.avg_gpa }}{% if not loop.last %},{% endif %}{% endfor %}],
+            borderColor: '#28a745',
+            backgroundColor: 'rgba(40, 167, 69, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 4.0,
+                ticks: {
+                    callback: function(value) {
+                        return value.toFixed(1);
+                    }
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+
+// Subject Performance Chart (Bar Chart)
+const subjectCtx = document.getElementById('subjectChart').getContext('2d');
+const subjectChart = new Chart(subjectCtx, {
+    type: 'bar',
+    data: {
+        labels: [{% for course in course_difficulty %}'{{ course.course_code }}'{% if not loop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Struggle Rate (%)',
+            data: [{% for course in course_difficulty %}{{ course.struggle_rate }}{% if not loop.last %},{% endif %}{% endfor %}],
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.6)',
+                'rgba(54, 162, 235, 0.6)',
+                'rgba(255, 206, 86, 0.6)',
+                'rgba(75, 192, 192, 0.6)',
+                'rgba(153, 102, 255, 0.6)',
+                'rgba(255, 159, 64, 0.6)'
+            ],
+            borderColor: [
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(75, 192, 192, 1)',
+                'rgba(153, 102, 255, 1)',
+                'rgba(255, 159, 64, 1)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        indexAxis: 'x',
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Struggle Rate (%)'
+                }
+            },
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Subject'
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            },
+            title: {
+                display: true,
+                text: 'Subject Performance Analysis'
+            }
+        }
+    }
+});
+
+// Export functionality
+function exportData() {
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Grade,Count\n";
+    
+    {% for grade in grade_distribution %}
+    csvContent += "{{ grade.grade }},{{ grade.count }}\n";
+    {% endfor %}
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "analytics_report.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function printReport() {
+    window.print();
+}
+</script>
+
+<style>
+@media print {
+    .btn, .card-header .btn {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}

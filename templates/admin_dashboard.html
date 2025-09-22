@@ -1,0 +1,326 @@
+<!-- templates/admin_dashboard.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Admin Dashboard</h2>
+    <div class="btn-group">
+        <a href="{{ url_for('reset_db') }}" class="btn btn-outline-warning btn-sm" onclick="return confirm('Are you sure you want to reset the database? This will delete all data!')">
+            <img src="{{ url_for('static', filename='images/reset.png') }}" alt="Reset" class="btn-icon">
+            Reset DB
+        </a>
+        <a href="{{ url_for('debug_users') }}" class="btn btn-outline-info btn-sm">
+            <img src="{{ url_for('static', filename='images/debug.png') }}" alt="Debug" class="btn-icon">
+            Debug
+        </a>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card dashboard-card text-white bg-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Students</h5>
+                        <h2 class="card-text">{{ student_count }}</h2>
+                    </div>
+                    <div>
+                        <img src="{{ url_for('static', filename='images/students.png') }}" alt="Students" width="40" height="40">
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('manage_students') }}" class="text-white">
+                    View Details <img src="{{ url_for('static', filename='images/arrow-right.png') }}" alt="Arrow" width="12" height="12">
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card dashboard-card text-white bg-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Results</h5>
+                        <h2 class="card-text">{{ result_count }}</h2>
+                    </div>
+                    <div>
+                        <img src="{{ url_for('static', filename='images/results.png') }}" alt="Results" width="40" height="40">
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('manage_results') }}" class="text-white">
+                    View Details <img src="{{ url_for('static', filename='images/arrow-right.png') }}" alt="Arrow" width="12" height="12">
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card dashboard-card text-white bg-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Documents</h5>
+                        <h2 class="card-text">{{ document_count }}</h2>
+                    </div>
+                    <div>
+                        <img src="{{ url_for('static', filename='images/documents.png') }}" alt="Documents" width="40" height="40">
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('manage_documents') }}" class="text-white">
+                    View Details <img src="{{ url_for('static', filename='images/arrow-right.png') }}" alt="Arrow" width="12" height="12">
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card dashboard-card text-white bg-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="card-title">Pending Docs</h5>
+                        <h2 class="card-text">{{ pending_docs }}</h2>
+                    </div>
+                    <div>
+                        <img src="{{ url_for('static', filename='images/pending.png') }}" alt="Pending" width="40" height="40">
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('manage_documents') }}" class="text-white">
+                    Review Now <img src="{{ url_for('static', filename='images/arrow-right.png') }}" alt="Arrow" width="12" height="12">
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Quick Actions -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('add_student') }}" class="btn btn-outline-primary mb-2">
+                        <img src="{{ url_for('static', filename='images/add-user.png') }}" alt="Add Student" class="btn-icon">
+                        Add New Student
+                    </a>
+                    <a href="{{ url_for('add_result') }}" class="btn btn-outline-success mb-2">
+                        <img src="{{ url_for('static', filename='images/add-result.png') }}" alt="Add Result" class="btn-icon">
+                        Add New Result
+                    </a>
+                    <a href="{{ url_for('analytics') }}" class="btn btn-outline-info mb-2">
+                        <img src="{{ url_for('static', filename='images/analytics.png') }}" alt="Analytics" class="btn-icon">
+                        View Analytics
+                    </a>
+                    <a href="{{ url_for('manage_documents') }}" class="btn btn-outline-warning mb-2">
+                        <img src="{{ url_for('static', filename='images/documents.png') }}" alt="Documents" class="btn-icon">
+                        Manage Documents
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grade Distribution -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Grade Distribution</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="gradeChart" width="100%" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Activity</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for doc in recent_docs %}
+                    <div class="list-group-item px-0 py-2">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ doc.full_name }}</h6>
+                            <small>{{ doc.upload_date[:10] }}</small>
+                        </div>
+                        <p class="mb-1 small">{{ doc.doc_name }}</p>
+                        <small>Status: 
+                            {% if doc.status == 'Approved' %}
+                            <img src="{{ url_for('static', filename='images/status-approved.png') }}" alt="Approved" class="icon"> Approved
+                            {% elif doc.status == 'Rejected' %}
+                            <img src="{{ url_for('static', filename='images/status-rejected.png') }}" alt="Rejected" class="icon"> Rejected
+                            {% else %}
+                            <img src="{{ url_for('static', filename='images/status-pending.png') }}" alt="Pending" class="icon"> Pending
+                            {% endif %}
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Results -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5>Recent Results</h5>
+                <a href="{{ url_for('manage_results') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_results %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Subject</th>
+                                <th>Grade</th>
+                                <th>Level</th>
+                                <th>Semester</th>
+                                <th>Year</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in recent_results %}
+                            <tr>
+                                <td>{{ result.full_name }} ({{ result.student_id }})</td>
+                                <td>{{ result.course_name }}</td>
+                                <td>
+                                    {% if result.grade in ['A', 'A-', 'B+'] %}
+                                    <img src="{{ url_for('static', filename='images/grade-a.png') }}" alt="A Grade" class="icon"> {{ result.grade }}
+                                    {% elif result.grade in ['B', 'B-', 'C+'] %}
+                                    <img src="{{ url_for('static', filename='images/grade-b.png') }}" alt="B Grade" class="icon"> {{ result.grade }}
+                                    {% elif result.grade in ['C', 'C-'] %}
+                                    <img src="{{ url_for('static', filename='images/grade-c.png') }}" alt="C Grade" class="icon"> {{ result.grade }}
+                                    {% elif result.grade in ['D+', 'D'] %}
+                                    <img src="{{ url_for('static', filename='images/grade-d.png') }}" alt="D Grade" class="icon"> {{ result.grade }}
+                                    {% else %}
+                                    <img src="{{ url_for('static', filename='images/grade-f.png') }}" alt="F Grade" class="icon"> {{ result.grade }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ result.subject_level or 'N/A' }}</td>
+                                <td>{{ result.semester }}</td>
+                                <td>{{ result.academic_year }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center">No results found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>System Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span>Database</span>
+                    <span class="badge bg-success">Online</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span>File Storage</span>
+                    <span class="badge bg-success">Online</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span>User Authentication</span>
+                    <span class="badge bg-success">Online</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>Last Backup</span>
+                    <span class="badge bg-info">{{ now() }}</span>
+                </div>
+                
+                <hr>
+                
+                <h6>Quick Links</h6>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('analytics') }}" class="btn btn-sm btn-outline-primary">
+                        <img src="{{ url_for('static', filename='images/analytics.png') }}" alt="Analytics" class="btn-icon">
+                        Performance Analytics
+                    </a>
+                    <a href="{{ url_for('manage_students') }}" class="btn btn-sm btn-outline-success">
+                        <img src="{{ url_for('static', filename='images/students.png') }}" alt="Students" class="btn-icon">
+                        Student Management
+                    </a>
+                    <a href="{{ url_for('manage_results') }}" class="btn btn-sm btn-outline-info">
+                        <img src="{{ url_for('static', filename='images/results.png') }}" alt="Results" class="btn-icon">
+                        Result Management
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Grade Distribution Chart
+    const gradeCtx = document.getElementById('gradeChart').getContext('2d');
+    const gradeChart = new Chart(gradeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [
+                {% for grade in grade_distribution %}
+                '{{ grade.grade }}',
+                {% endfor %}
+            ],
+            datasets: [{
+                data: [
+                    {% for grade in grade_distribution %}
+                    {{ grade.count }},
+                    {% endfor %}
+                ],
+                backgroundColor: [
+                    '#28a745', // A - Green
+                    '#20c997', // A- - Teal
+                    '#17a2b8', // B+ - Cyan
+                    '#ffc107', // B - Yellow
+                    '#fd7e14', // B- - Orange
+                    '#dc3545', // C+ - Red
+                    '#6c757d', // C - Gray
+                    '#343a40', // C- - Dark Gray
+                    '#6610f2', // D+ - Purple
+                    '#e83e8c', // D - Pink
+                    '#6f42c1'  // F - Indigo
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                },
+                title: {
+                    display: true,
+                    text: 'Grade Distribution'
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

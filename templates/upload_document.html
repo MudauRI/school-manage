@@ -1,0 +1,36 @@
+<!-- templates/upload_document.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4">Upload Document</h2>
+
+<div class="card">
+    <div class="card-header">
+        <h5>Document Upload</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="doc_type" class="form-label">Document Type</label>
+                    <select class="form-select" id="doc_type" name="doc_type" required>
+                        <option value="">Select Document Type</option>
+                        <option value="Transcript">Transcript</option>
+                        <option value="Certificate">Certificate</option>
+                        <option value="ID Copy">ID Copy</option>
+                        <option value="Application Form">Application Form</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="document" class="form-label">Document File</label>
+                    <input type="file" class="form-control" id="document" name="document" required>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Upload Document</button>
+            <a href="{{ url_for('student_dashboard') }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

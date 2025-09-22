@@ -6,11 +6,11 @@
     <h2>Admin Dashboard</h2>
     <div class="btn-group">
         <a href="{{ url_for('reset_db') }}" class="btn btn-outline-warning btn-sm" onclick="return confirm('Are you sure you want to reset the database? This will delete all data!')">
-            <img src="{{ url_for('static', filename='images/reset.png') }}" alt="Reset" class="btn-icon">
+            <i class="fas fa-redo me-1"></i>
             Reset DB
         </a>
         <a href="{{ url_for('debug_users') }}" class="btn btn-outline-info btn-sm">
-            <img src="{{ url_for('static', filename='images/debug.png') }}" alt="Debug" class="btn-icon">
+            <i class="fas fa-bug me-1"></i>
             Debug
         </a>
     </div>
@@ -27,13 +27,13 @@
                         <h2 class="card-text">{{ student_count }}</h2>
                     </div>
                     <div>
-                        <img src="{{ url_for('static', filename='images/students.png') }}" alt="Students" width="40" height="40">
+                        <i class="fas fa-users fa-2x opacity-75"></i>
                     </div>
                 </div>
             </div>
             <div class="card-footer">
                 <a href="{{ url_for('manage_students') }}" class="text-white">
-                    View Details <img src="{{ url_for('static', filename='images/arrow-right.png') }}" alt="Arrow" width="12" height="12">
+                    View Details <i class="fas fa-arrow-right ms-1"></i>
                 </a>
             </div>
         </div>
@@ -47,13 +47,13 @@
                         <h2 class="card-text">{{ result_count }}</h2>
                     </div>
                     <div>
-                        <img src="{{ url_for('static', filename='images/results.png') }}" alt="Results" width="40" height="40">
+                        <i class="fas fa-chart-bar fa-2x opacity-75"></i>
                     </div>
                 </div>
             </div>
             <div class="card-footer">
                 <a href="{{ url_for('manage_results') }}" class="text-white">
-                    View Details <img src="{{ url_for('static', filename='images/arrow-right.png') }}" alt="Arrow" width="12" height="12">
+                    View Details <i class="fas fa-arrow-right ms-1"></i>
                 </a>
             </div>
         </div>
@@ -67,13 +67,13 @@
                         <h2 class="card-text">{{ document_count }}</h2>
                     </div>
                     <div>
-                        <img src="{{ url_for('static', filename='images/documents.png') }}" alt="Documents" width="40" height="40">
+                        <i class="fas fa-file-alt fa-2x opacity-75"></i>
                     </div>
                 </div>
             </div>
             <div class="card-footer">
                 <a href="{{ url_for('manage_documents') }}" class="text-white">
-                    View Details <img src="{{ url_for('static', filename='images/arrow-right.png') }}" alt="Arrow" width="12" height="12">
+                    View Details <i class="fas fa-arrow-right ms-1"></i>
                 </a>
             </div>
         </div>
@@ -87,13 +87,13 @@
                         <h2 class="card-text">{{ pending_docs }}</h2>
                     </div>
                     <div>
-                        <img src="{{ url_for('static', filename='images/pending.png') }}" alt="Pending" width="40" height="40">
+                        <i class="fas fa-clock fa-2x opacity-75"></i>
                     </div>
                 </div>
             </div>
             <div class="card-footer">
                 <a href="{{ url_for('manage_documents') }}" class="text-white">
-                    Review Now <img src="{{ url_for('static', filename='images/arrow-right.png') }}" alt="Arrow" width="12" height="12">
+                    Review Now <i class="fas fa-arrow-right ms-1"></i>
                 </a>
             </div>
         </div>
@@ -110,19 +110,19 @@
             <div class="card-body">
                 <div class="d-grid gap-2">
                     <a href="{{ url_for('add_student') }}" class="btn btn-outline-primary mb-2">
-                        <img src="{{ url_for('static', filename='images/add-user.png') }}" alt="Add Student" class="btn-icon">
+                        <i class="fas fa-user-plus me-2"></i>
                         Add New Student
                     </a>
                     <a href="{{ url_for('add_result') }}" class="btn btn-outline-success mb-2">
-                        <img src="{{ url_for('static', filename='images/add-result.png') }}" alt="Add Result" class="btn-icon">
+                        <i class="fas fa-plus-circle me-2"></i>
                         Add New Result
                     </a>
                     <a href="{{ url_for('analytics') }}" class="btn btn-outline-info mb-2">
-                        <img src="{{ url_for('static', filename='images/analytics.png') }}" alt="Analytics" class="btn-icon">
+                        <i class="fas fa-chart-line me-2"></i>
                         View Analytics
                     </a>
                     <a href="{{ url_for('manage_documents') }}" class="btn btn-outline-warning mb-2">
-                        <img src="{{ url_for('static', filename='images/documents.png') }}" alt="Documents" class="btn-icon">
+                        <i class="fas fa-file-alt me-2"></i>
                         Manage Documents
                     </a>
                 </div>
@@ -159,11 +159,11 @@
                         <p class="mb-1 small">{{ doc.doc_name }}</p>
                         <small>Status: 
                             {% if doc.status == 'Approved' %}
-                            <img src="{{ url_for('static', filename='images/status-approved.png') }}" alt="Approved" class="icon"> Approved
+                            <i class="fas fa-check-circle text-success me-1"></i> Approved
                             {% elif doc.status == 'Rejected' %}
-                            <img src="{{ url_for('static', filename='images/status-rejected.png') }}" alt="Rejected" class="icon"> Rejected
+                            <i class="fas fa-times-circle text-danger me-1"></i> Rejected
                             {% else %}
-                            <img src="{{ url_for('static', filename='images/status-pending.png') }}" alt="Pending" class="icon"> Pending
+                            <i class="fas fa-clock text-warning me-1"></i> Pending
                             {% endif %}
                         </small>
                     </div>
@@ -202,17 +202,9 @@
                                 <td>{{ result.full_name }} ({{ result.student_id }})</td>
                                 <td>{{ result.course_name }}</td>
                                 <td>
-                                    {% if result.grade in ['A', 'A-', 'B+'] %}
-                                    <img src="{{ url_for('static', filename='images/grade-a.png') }}" alt="A Grade" class="icon"> {{ result.grade }}
-                                    {% elif result.grade in ['B', 'B-', 'C+'] %}
-                                    <img src="{{ url_for('static', filename='images/grade-b.png') }}" alt="B Grade" class="icon"> {{ result.grade }}
-                                    {% elif result.grade in ['C', 'C-'] %}
-                                    <img src="{{ url_for('static', filename='images/grade-c.png') }}" alt="C Grade" class="icon"> {{ result.grade }}
-                                    {% elif result.grade in ['D+', 'D'] %}
-                                    <img src="{{ url_for('static', filename='images/grade-d.png') }}" alt="D Grade" class="icon"> {{ result.grade }}
-                                    {% else %}
-                                    <img src="{{ url_for('static', filename='images/grade-f.png') }}" alt="F Grade" class="icon"> {{ result.grade }}
-                                    {% endif %}
+                                    <span class="badge bg-{% if result.grade in ['A', 'A-', 'B+'] %}success{% elif result.grade in ['B', 'B-', 'C+'] %}warning{% else %}danger{% endif %}">
+                                        {{ result.grade }}
+                                    </span>
                                 </td>
                                 <td>{{ result.subject_level or 'N/A' }}</td>
                                 <td>{{ result.semester }}</td>
@@ -258,15 +250,15 @@
                 <h6>Quick Links</h6>
                 <div class="d-grid gap-2">
                     <a href="{{ url_for('analytics') }}" class="btn btn-sm btn-outline-primary">
-                        <img src="{{ url_for('static', filename='images/analytics.png') }}" alt="Analytics" class="btn-icon">
+                        <i class="fas fa-chart-line me-2"></i>
                         Performance Analytics
                     </a>
                     <a href="{{ url_for('manage_students') }}" class="btn btn-sm btn-outline-success">
-                        <img src="{{ url_for('static', filename='images/students.png') }}" alt="Students" class="btn-icon">
+                        <i class="fas fa-users me-2"></i>
                         Student Management
                     </a>
                     <a href="{{ url_for('manage_results') }}" class="btn btn-sm btn-outline-info">
-                        <img src="{{ url_for('static', filename='images/results.png') }}" alt="Results" class="btn-icon">
+                        <i class="fas fa-chart-bar me-2"></i>
                         Result Management
                     </a>
                 </div>

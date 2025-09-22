@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4">Edit Result</h2>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label for="student_id" class="form-label">Student ID</label>
+                <input type="text" class="form-control" id="student_id" name="student_id" value="{{ result.student_id }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="course_code" class="form-label">Course Code</label>
+                <input type="text" class="form-control" id="course_code" name="course_code" value="{{ result.course_code }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="course_name" class="form-label">Course Name</label>
+                <input type="text" class="form-control" id="course_name" name="course_name" value="{{ result.course_name }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="subject_level" class="form-label">Subject Level</label>
+                <input type="text" class="form-control" id="subject_level" name="subject_level" value="{{ result.subject_level }}">
+            </div>
+            <div class="mb-3">
+                <label for="grade" class="form-label">Grade</label>
+                <input type="text" class="form-control" id="grade" name="grade" value="{{ result.grade }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="credits" class="form-label">Credits</label>
+                <input type="number" class="form-control" id="credits" name="credits" value="{{ result.credits }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="semester" class="form-label">Semester</label>
+                <input type="text" class="form-control" id="semester" name="semester" value="{{ result.semester }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="academic_year" class="form-label">Academic Year</label>
+                <input type="text" class="form-control" id="academic_year" name="academic_year" value="{{ result.academic_year }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="remark" class="form-label">Remark</label>
+                <textarea class="form-control" id="remark" name="remark" rows="3">{{ result.remark }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Result</button>
+            <a href="{{ url_for('manage_results') }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

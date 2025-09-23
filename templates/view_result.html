@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Result Details</h2>
+    <div class="btn-group">
+        <a href="{{ url_for('edit_result', result_id=result.id) }}" class="btn btn-warning">
+            <i class="fas fa-edit me-1"></i> Edit Result
+        </a>
+        <a href="{{ url_for('view_student', student_id=result.student_id) }}" class="btn btn-info">
+            <i class="fas fa-user me-1"></i> View Student
+        </a>
+        <a href="{{ url_for('manage_results') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to Results
+        </a>
+    </div>
+</div>
+
+<!-- Result Information Card -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-graduation-cap me-2"></i>Result Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Student ID:</strong> {{ result.student_id }}</p>
+                        <p><strong>Student Name:</strong> {{ result.full_name }}</p>
+                        <p><strong>Course Code:</strong> {{ result.course_code }}</p>
+                        <p><strong>Course Name:</strong> {{ result.course_name }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Subject Level:</strong> {{ result.subject_level or 'N/A' }}</p>
+                        <p><strong>Credits:</strong> {{ result.credits }}</p>
+                        <p><strong>Semester:</strong> {{ result.semester }}</p>
+                        <p><strong>Academic Year:</strong> {{ result.academic_year }}</p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-md-12">
+                        <p><strong>Grade:</strong> 
+                            <span class="badge fs-6 bg-{% if result.grade in ['A', 'A-', 'B+'] %}success{% elif result.grade in ['B', 'B-', 'C+'] %}warning{% else %}danger{% endif %}">
+                                {{ result.grade }}
+                            </span>
+                        </p>
+                        
+                        {% if result.remark %}
+                        <p><strong>Remark:</strong></p>
+                        <div class="alert alert-light">
+                            {{ result.remark }}
+                        </div>
+                        {% else %}
+                        <p><strong>Remark:</strong> <span class="text-muted">No remark provided</span></p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Student Summary -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-line me-2"></i>Student Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <h3 class="text-primary">{{ student_gpa }}</h3>
+                    <small class="text-muted">Overall GPA</small>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Program:</span>
+                    <strong>{{ result.program }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Year:</span>
+                    <strong>{{ result.year }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Total Subjects:</span>
+                    <strong>{{ student_results|length }}</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Email:</span>
+                    <small>{{ result.email }}</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6><i class="fas fa-tools me-2"></i>Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('add_result') }}?student_id={{ result.student_id }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-plus me-1"></i> Add Another Result
+                    </a>
+                    <button class="btn btn-outline-danger btn-sm" onclick="confirmDelete()">
+                        <i class="fas fa-trash me-1"></i> Delete This Result
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Student's Other Results -->
+{% if student_results|length > 1 %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-list me-2"></i>Student's Other Results</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Course Code</th>
+                                <th>Course Name</th>
+                                <th>Level</th>
+                                <th>Grade</th>
+                                <th>Credits</th>
+                                <th>Semester</th>
+                                <th>Academic Year</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for other_result in student_results %}
+                            <tr {% if other_result.id == result.id %}class="table-warning"{% endif %}>
+                                <td>
+                                    <strong>{{ other_result.course_code }}</strong>
+                                    {% if other_result.id == result.id %}
+                                    <span class="badge bg-warning text-dark ms-1">Current</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ other_result.course_name }}</td>
+                                <td>{{ other_result.subject_level or 'N/A' }}</td>
+                                <td>
+                                    <span class="badge bg-{% if other_result.grade in ['A', 'A-', 'B+'] %}success{% elif other_result.grade in ['B', 'B-', 'C+'] %}warning{% else %}danger{% endif %}">
+                                        {{ other_result.grade }}
+                                    </span>
+                                </td>
+                                <td>{{ other_result.credits }}</td>
+                                <td>{{ other_result.semester }}</td>
+                                <td>{{ other_result.academic_year }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        {% if other_result.id != result.id %}
+                                        <a href="{{ url_for('view_result', result_id=other_result.id) }}" class="btn btn
+                                                    <hr>
+            
+            <div class="row">
+                <div class="col-md-12">
+                    <p><strong>Grade:</strong> 
+                        <span class="badge fs-6 bg-{% if result.grade in ['A', 'A-', 'B+'] %}success{% elif result.grade in ['B', 'B-', 'C+'] %}warning{% else %}danger{% endif %}">
+                            {{ result.grade }}
+                        </span>
+                    </p>
+                    
+                    {% if result.remark %}
+                    <p><strong>Remark:</strong></p>
+                    <div class="alert alert-light">
+                        {{ result.remark }}
+                    </div>
+                    {% else %}
+                    <p><strong>Remark:</strong> <span class="text-muted">No remark provided</span></p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Student Summary -->
+<div class="col-md-4">
+    <div class="card">
+        <div class="card-header">
+            <h5><i class="fas fa-chart-line me-2"></i>Student Overview</h5>
+        </div>
+        <div class="card-body">
+            <div class="text-center mb-3">
+                <h3 class="text-primary">{{ student_gpa }}</h3>
+                <small class="text-muted">Overall GPA</small>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between mb-2">
+                <span>Program:</span>
+                <strong>{{ result.program }}</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span>Year:</span>
+                <strong>{{ result.year }}</strong>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+                <span>Total Subjects:</span>
+                <strong>{{ student_results|length }}</strong>
+            </div>
+            <div class="d-flex justify-content-between">
+                <span>Email:</span>
+                <small>{{ result.email }}</small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="card mt-3">
+        <div class="card-header">
+            <h6><i class="fas fa-tools me-2"></i>Quick Actions</h6>
+        </div>
+        <div class="card-body">
+            <div class="d-grid gap-2">
+                <a href="{{ url_for('add_result') }}?student_id={{ result.student_id }}" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i> Add Another Result
+                </a>
+                <button class="btn btn-outline-danger btn-sm" onclick="confirmDelete()">
+                    <i class="fas fa-trash me-1"></i> Delete This Result
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

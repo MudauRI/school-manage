@@ -26,6 +26,12 @@ SUBJECTS = {
     'Physical Sciences': ['Level 7', 'Level 6', 'Level 5', 'Level 4', 'Level 3', 'Level 2', 'Level 1']
 }
 
+# Grade to points mapping
+GRADE_TO_POINTS = {
+    'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7,
+    'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D+': 1.3, 'D': 1.0, 'F': 0.0
+}
+
 # Ensure upload directory exists
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
@@ -42,7 +48,8 @@ def init_db():
                  password TEXT NOT NULL,
                  role TEXT NOT NULL,
                  full_name TEXT,
-                 email TEXT)''')
+                 email TEXT,
+                 created_at TEXT DEFAULT CURRENT_TIMESTAMP)''')
     
     # Create students table
     c.execute('''CREATE TABLE IF NOT EXISTS students
@@ -54,7 +61,8 @@ def init_db():
                  year INTEGER,
                  date_of_birth TEXT,
                  phone_number TEXT,
-                 address TEXT)''')
+                 address TEXT,
+                 created_at TEXT DEFAULT CURRENT_TIMESTAMP)''')
     
     # Create results table with remark field
     c.execute('''CREATE TABLE IF NOT EXISTS results
@@ -68,6 +76,8 @@ def init_db():
                  semester TEXT NOT NULL,
                  academic_year TEXT NOT NULL,
                  remark TEXT,
+                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                 updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
                  FOREIGN KEY (student_id) REFERENCES students (student_id))''')
     
     # Create documents table
@@ -80,6 +90,8 @@ def init_db():
                  upload_date TEXT NOT NULL,
                  status TEXT DEFAULT 'Pending',
                  feedback TEXT,
+                 reviewed_by TEXT,
+                 reviewed_at TEXT,
                  FOREIGN KEY (student_id) REFERENCES students (student_id))''')
     
     # Insert default admin user if not exists
@@ -94,9 +106,9 @@ def init_db():
     
     # Insert some sample students
     sample_students = [
-        ('S1001', 'Rendani Mudau', 'rendani.mudau@student.izra.edu', 'Grade 12', 2023, '2000-05-15', '+1234567890', '123 Main St, City'),
-        ('S1002', 'Emma Sithi', 'emma.sithi@student.izra.edu', 'Grade 12', 2023, '2001-02-20', '+1234567891', '456 Oak Ave, Town'),
-        ('S1003', 'Michael Tshwika', 'michael.tswika@student.izra.edu', 'Grade 11', 2022, '1999-11-10', '+1234567892', '789 Pine Rd, Village')
+        ('S1001', 'Rendani Mudau', 'rendani.mudau@student.izra.edu', 'Grade 12', 2023, '2000-05-15', '+27123456789', '123 Main St, Johannesburg'),
+        ('S1002', 'Emma Sithi', 'emma.sithi@student.izra.edu', 'Grade 12', 2023, '2001-02-20', '+27123456790', '456 Oak Ave, Pretoria'),
+        ('S1003', 'Michael Tshwika', 'michael.tswika@student.izra.edu', 'Grade 11', 2022, '1999-11-10', '+27123456791', '789 Pine Rd, Cape Town')
     ]
     
     for student in sample_students:
@@ -119,19 +131,23 @@ def init_db():
     
     # Insert some sample results with South African subjects
     sample_results = [
-        ('S1001', 'ENGHL', 'English Home Language', 'Level 4', 'A', 4, 'Term 1', '2022-2023', 'Excellent performance in reading comprehension'),
-        ('S1001', 'MATH', 'Mathematics', 'Level 4', 'B+', 3, 'Term 1', '2022-2023', 'Good understanding of algebra concepts'),
-        ('S1001', 'PHYSCI', 'Physical Sciences', 'Level 4', 'A-', 4, 'Term 1', '2022-2023', 'Strong in practical experiments'),
-        ('S1002', 'AFRHL', 'Afrikaans Home Language', 'Level 4', 'A-', 4, 'Term 1', '2022-2023', 'Excellent written skills'),
-        ('S1002', 'BUSSTU', 'Business Studies', 'Level 4', 'B', 3, 'Term 1', '2022-2023', 'Good understanding of business concepts'),
-        ('S1002', 'ACCT', 'Accounting', 'Level 4', 'B+', 3, 'Term 1', '2022-2023', 'Needs improvement in financial statements'),
-        ('S1003', 'ZULHL', 'isiZulu Home Language', 'Level 4', 'A', 4, 'Term 1', '2022-2023', 'Excellent oral and written skills'),
-        ('S1003', 'LIFSCI', 'Life Sciences', 'Level 4', 'A', 4, 'Term 1', '2022-2023', 'Very good in biological concepts'),
-        ('S1003', 'GEOG', 'Geography', 'Level 4', 'B+', 3, 'Term 1', '2022-2023', 'Good mapwork skills')
+        ('S1001', 'ENGHL', 'English Home Language', 'Level 4', 'A', 4, 'Term 1', '2023', 'Excellent performance in reading comprehension'),
+        ('S1001', 'MATH', 'Mathematics', 'Level 4', 'B+', 3, 'Term 1', '2023', 'Good understanding of algebra concepts'),
+        ('S1001', 'PHYSCI', 'Physical Sciences', 'Level 4', 'A-', 4, 'Term 1', '2023', 'Strong in practical experiments'),
+        ('S1001', 'LIFSCI', 'Life Sciences', 'Level 4', 'B', 3, 'Term 2', '2023', 'Good grasp of biological concepts'),
+        ('S1002', 'AFRHL', 'Afrikaans Home Language', 'Level 4', 'A-', 4, 'Term 1', '2023', 'Excellent written skills'),
+        ('S1002', 'BUSSTU', 'Business Studies', 'Level 4', 'B', 3, 'Term 1', '2023', 'Good understanding of business concepts'),
+        ('S1002', 'ACCT', 'Accounting', 'Level 4', 'B+', 3, 'Term 1', '2023', 'Needs improvement in financial statements'),
+        ('S1002', 'GEOG', 'Geography', 'Level 4', 'A', 4, 'Term 2', '2023', 'Excellent map work skills'),
+        ('S1003', 'ZULHL', 'isiZulu Home Language', 'Level 4', 'A', 4, 'Term 1', '2022', 'Excellent oral and written skills'),
+        ('S1003', 'LIFSCI', 'Life Sciences', 'Level 4', 'A', 4, 'Term 1', '2022', 'Very good in biological concepts'),
+        ('S1003', 'GEOG', 'Geography', 'Level 4', 'B+', 3, 'Term 1', '2022', 'Good mapwork skills'),
+        ('S1003', 'HIST', 'History', 'Level 4', 'B', 3, 'Term 2', '2022', 'Good analytical skills')
     ]
     
     for result in sample_results:
-        result_exists = c.execute("SELECT * FROM results WHERE student_id=? AND course_code=?", (result[0], result[1])).fetchone()
+        result_exists = c.execute("SELECT * FROM results WHERE student_id=? AND course_code=? AND semester=? AND academic_year=?", 
+                                 (result[0], result[1], result[5], result[6])).fetchone()
         if not result_exists:
             c.execute("INSERT INTO results (student_id, course_code, course_name, subject_level, grade, credits, semester, academic_year, remark) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", result)
             print(f"Result for {result[0]} in {result[1]} created successfully")
@@ -149,6 +165,25 @@ def get_db_connection():
     conn = sqlite3.connect('results.db')
     conn.row_factory = sqlite3.Row
     return conn
+
+# Helper function to calculate GPA
+def calculate_gpa(results):
+    if not results:
+        return 0.0
+    
+    grade_points = 0
+    total_credits = 0
+    
+    for result in results:
+        credit = result['credits'] or 0
+        grade = result['grade']
+        
+        if grade in GRADE_TO_POINTS:
+            points = GRADE_TO_POINTS[grade]
+            grade_points += points * credit
+            total_credits += credit
+    
+    return round(grade_points / total_credits, 2) if total_credits > 0 else 0.0
 
 # Authentication decorators
 def login_required(f):
@@ -291,10 +326,48 @@ def admin_dashboard():
 @app.route('/admin/students')
 @admin_required
 def manage_students():
+    search = request.args.get('search', '')
+    program_filter = request.args.get('program', '')
+    year_filter = request.args.get('year', '')
+    
     conn = get_db_connection()
-    students = conn.execute('SELECT * FROM students ORDER BY student_id').fetchall()
+    
+    # Build query with filters
+    query = 'SELECT * FROM students WHERE 1=1'
+    params = []
+    
+    if search:
+        query += ' AND (student_id LIKE ? OR full_name LIKE ? OR email LIKE ?)'
+        search_param = f'%{search}%'
+        params.extend([search_param, search_param, search_param])
+    
+    if program_filter:
+        query += ' AND program = ?'
+        params.append(program_filter)
+    
+    if year_filter:
+        query += ' AND year = ?'
+        params.append(year_filter)
+    
+    query += ' ORDER BY student_id'
+    
+    students = conn.execute(query, params).fetchall()
+    
+    # Get filter options
+    programs = conn.execute('SELECT DISTINCT program FROM students ORDER BY program').fetchall()
+    years = conn.execute('SELECT DISTINCT year FROM students ORDER BY year DESC').fetchall()
+    
     conn.close()
-    return render_template('manage_students.html', students=students)
+    
+    return render_template('manage_students.html', 
+                          students=students,
+                          programs=programs,
+                          years=years,
+                          current_filters={
+                              'search': search,
+                              'program': program_filter,
+                              'year': year_filter
+                          })
 
 @app.route('/admin/student/<student_id>')
 @admin_required
@@ -309,36 +382,40 @@ def view_student(student_id):
         conn.close()
         return redirect(url_for('manage_students'))
     
-    # Get student results
-    results = conn.execute('SELECT * FROM results WHERE student_id = ? ORDER BY academic_year DESC, semester', (student_id,)).fetchall()
+    # Get student results with better sorting
+    results = conn.execute('''
+        SELECT * FROM results 
+        WHERE student_id = ? 
+        ORDER BY academic_year DESC, semester DESC, course_code
+    ''', (student_id,)).fetchall()
     
     # Get student documents
-    documents = conn.execute('SELECT * FROM documents WHERE student_id = ? ORDER BY upload_date DESC', (student_id,)).fetchall()
+    documents = conn.execute('''
+        SELECT * FROM documents 
+        WHERE student_id = ? 
+        ORDER BY upload_date DESC
+    ''', (student_id,)).fetchall()
     
-    # Calculate GPA
-    grade_points = 0
-    total_credits = 0
+    # Calculate GPA and other statistics
+    gpa = calculate_gpa(results)
+    total_credits = sum(r['credits'] or 0 for r in results)
+    
+    # Grade distribution
+    grade_distribution = {}
     for result in results:
-        credit = result['credits']
         grade = result['grade']
-        
-        # Convert grade to points
-        if grade == 'A': points = 4.0
-        elif grade == 'A-': points = 3.7
-        elif grade == 'B+': points = 3.3
-        elif grade == 'B': points = 3.0
-        elif grade == 'B-': points = 2.7
-        elif grade == 'C+': points = 2.3
-        elif grade == 'C': points = 2.0
-        elif grade == 'C-': points = 1.7
-        elif grade == 'D+': points = 1.3
-        elif grade == 'D': points = 1.0
-        else: points = 0.0
-        
-        grade_points += points * credit
-        total_credits += credit
+        grade_distribution[grade] = grade_distribution.get(grade, 0) + 1
     
-    gpa = round(grade_points / total_credits, 2) if total_credits > 0 else 0
+    # Calculate additional statistics
+    total_subjects = len(results)
+    passed_subjects = sum(1 for r in results if r['grade'] not in ['F', 'D'])
+    highest_grade = max([r['grade'] for r in results], key=lambda x: GRADE_TO_POINTS.get(x, 0)) if results else 'N/A'
+    lowest_grade = min([r['grade'] for r in results], key=lambda x: GRADE_TO_POINTS.get(x, 0)) if results else 'N/A'
+    
+    # Document statistics
+    pending_docs = sum(1 for d in documents if d['status'] == 'Pending')
+    approved_docs = sum(1 for d in documents if d['status'] == 'Approved')
+    rejected_docs = sum(1 for d in documents if d['status'] == 'Rejected')
     
     conn.close()
     
@@ -348,6 +425,51 @@ def view_student(student_id):
                           documents=documents,
                           gpa=gpa,
                           total_credits=total_credits,
+                          total_subjects=total_subjects,
+                          passed_subjects=passed_subjects,
+                          highest_grade=highest_grade,
+                          lowest_grade=lowest_grade,
+                          grade_distribution=grade_distribution,
+                          pending_docs=pending_docs,
+                          approved_docs=approved_docs,
+                          rejected_docs=rejected_docs,
+                          subjects=SUBJECTS)
+
+@app.route('/admin/view_result/<int:result_id>')
+@admin_required
+def view_result(result_id):
+    """View individual result details"""
+    conn = get_db_connection()
+    
+    # Get result with student information
+    result = conn.execute('''
+        SELECT r.*, s.full_name, s.email, s.program, s.year
+        FROM results r 
+        JOIN students s ON r.student_id = s.student_id 
+        WHERE r.id = ?
+    ''', (result_id,)).fetchone()
+    
+    if not result:
+        flash('Result not found.', 'danger')
+        conn.close()
+        return redirect(url_for('manage_results'))
+    
+    # Get all results for this student to show context
+    student_results = conn.execute('''
+        SELECT * FROM results 
+        WHERE student_id = ? 
+        ORDER BY academic_year DESC, semester DESC
+    ''', (result['student_id'],)).fetchall()
+    
+    # Calculate student's overall GPA
+    student_gpa = calculate_gpa(student_results)
+    
+    conn.close()
+    
+    return render_template('view_result.html', 
+                          result=result,
+                          student_results=student_results,
+                          student_gpa=student_gpa,
                           subjects=SUBJECTS)
 
 @app.route('/admin/edit_student/<student_id>', methods=['GET', 'POST'])
@@ -406,14 +528,16 @@ def delete_student(student_id):
         conn.close()
         return redirect(url_for('manage_students'))
     
-    # Delete student (cascade delete should handle related records)
+    # Delete related records first
+    conn.execute('DELETE FROM results WHERE student_id = ?', (student_id,))
+    conn.execute('DELETE FROM documents WHERE student_id = ?', (student_id,))
     conn.execute('DELETE FROM students WHERE student_id = ?', (student_id,))
     conn.execute('DELETE FROM users WHERE username = ?', (student_id,))
     
     conn.commit()
     conn.close()
     
-    flash('Student deleted successfully!', 'success')
+    flash('Student and all related records deleted successfully!', 'success')
     return redirect(url_for('manage_students'))
 
 @app.route('/admin/results')
@@ -425,6 +549,7 @@ def manage_results():
     semester_filter = request.args.get('semester', '')
     year_filter = request.args.get('year', '')
     subject_filter = request.args.get('subject', '')
+    student_filter = request.args.get('student', '')
     
     conn = get_db_connection()
     
@@ -457,6 +582,10 @@ def manage_results():
         query += ' AND r.course_name LIKE ?'
         params.append(f'%{subject_filter}%')
     
+    if student_filter:
+        query += ' AND (r.student_id LIKE ? OR s.full_name LIKE ?)'
+        params.extend([f'%{student_filter}%', f'%{student_filter}%'])
+    
     query += ' ORDER BY r.academic_year DESC, r.semester, r.student_id'
     
     results = conn.execute(query, params).fetchall()
@@ -481,7 +610,8 @@ def manage_results():
                               'grade': grade_filter,
                               'semester': semester_filter,
                               'year': year_filter,
-                              'subject': subject_filter
+                              'subject': subject_filter,
+                              'student': student_filter
                           })
 
 @app.route('/admin/edit_result/<int:result_id>', methods=['GET', 'POST'])
@@ -502,7 +632,8 @@ def edit_result(result_id):
         # Update result
         conn.execute('''
             UPDATE results 
-            SET course_code = ?, course_name = ?, subject_level = ?, grade = ?, credits = ?, semester = ?, academic_year = ?, remark = ?
+            SET course_code = ?, course_name = ?, subject_level = ?, grade = ?, credits = ?, 
+                semester = ?, academic_year = ?, remark = ?, updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
         ''', (course_code, course_name, subject_level, grade, credits, semester, academic_year, remark, result_id))
         
@@ -510,10 +641,16 @@ def edit_result(result_id):
         conn.close()
         
         flash('Result updated successfully!', 'success')
-        return redirect(url_for('manage_results'))
+        return redirect(url_for('view_result', result_id=result_id))
     
     # GET request - load result data
-    result = conn.execute('SELECT * FROM results WHERE id = ?', (result_id,)).fetchone()
+    result = conn.execute('''
+        SELECT r.*, s.full_name 
+        FROM results r 
+        JOIN students s ON r.student_id = s.student_id 
+        WHERE r.id = ?
+    ''', (result_id,)).fetchone()
+    
     conn.close()
     
     if not result:
@@ -527,26 +664,40 @@ def edit_result(result_id):
 def delete_result(result_id):
     conn = get_db_connection()
     
-    # Check if result exists
-    result = conn.execute('SELECT * FROM results WHERE id = ?', (result_id,)).fetchone()
+    # Check if result exists and get student info for redirect
+    result = conn.execute('''
+        SELECT r.*, s.full_name 
+        FROM results r 
+        JOIN students s ON r.student_id = s.student_id 
+        WHERE r.id = ?
+    ''', (result_id,)).fetchone()
+    
     if not result:
         flash('Result not found.', 'danger')
         conn.close()
         return redirect(url_for('manage_results'))
     
+    student_id = result['student_id']
+    
     # Delete result
     conn.execute('DELETE FROM results WHERE id = ?', (result_id,))
-    
     conn.commit()
     conn.close()
     
-    flash('Result deleted successfully!', 'success')
-    return redirect(url_for('manage_results'))
+    flash(f'Result for {result["course_name"]} deleted successfully!', 'success')
+    
+    # Check if we came from student view
+    if request.referrer and 'student' in request.referrer:
+        return redirect(url_for('view_student', student_id=student_id))
+    else:
+        return redirect(url_for('manage_results'))
 
 @app.route('/admin/documents')
 @admin_required
 def manage_documents():
     status_filter = request.args.get('status', '')
+    doc_type_filter = request.args.get('doc_type', '')
+    student_filter = request.args.get('student', '')
     
     conn = get_db_connection()
     
@@ -563,19 +714,33 @@ def manage_documents():
         query += ' AND d.status = ?'
         params.append(status_filter)
     
+    if doc_type_filter:
+        query += ' AND d.doc_type = ?'
+        params.append(doc_type_filter)
+    
+    if student_filter:
+        query += ' AND (d.student_id LIKE ? OR s.full_name LIKE ?)'
+        params.extend([f'%{student_filter}%', f'%{student_filter}%'])
+    
     query += ' ORDER BY d.upload_date DESC'
     
     documents = conn.execute(query, params).fetchall()
     
-    # Get status options for filter
+    # Get filter options
     status_options = ['Pending', 'Approved', 'Rejected']
+    doc_types = conn.execute('SELECT DISTINCT doc_type FROM documents ORDER BY doc_type').fetchall()
     
     conn.close()
     
     return render_template('manage_documents.html', 
                           documents=documents,
                           status_options=status_options,
-                          current_filter=status_filter)
+                          doc_types=doc_types,
+                          current_filters={
+                              'status': status_filter,
+                              'doc_type': doc_type_filter,
+                              'student': student_filter
+                          })
 
 @app.route('/admin/update_document_status/<int:doc_id>', methods=['POST'])
 @admin_required
@@ -584,13 +749,25 @@ def update_document_status(doc_id):
     feedback = request.form.get('feedback', '')
     
     conn = get_db_connection()
-    conn.execute('UPDATE documents SET status = ?, feedback = ? WHERE id = ?', (new_status, feedback, doc_id))
+    conn.execute('''
+        UPDATE documents 
+        SET status = ?, feedback = ?, reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP 
+        WHERE id = ?
+    ''', (new_status, feedback, session['username'], doc_id))
     conn.commit()
     conn.close()
     
-    flash('Document status updated successfully!', 'success')
+    flash(f'Document status updated to {new_status}!', 'success')
+    
+    # Check if we came from student view
+    if request.referrer and 'student' in request.referrer:
+        # Extract student ID from referrer URL
+        import re
+        student_match = re.search(r'/student/([^/]+)', request.referrer)
+        if student_match:
+            return redirect(url_for('view_student', student_id=student_match.group(1)))
+    
     return redirect(url_for('manage_documents'))
-
 
 @app.route('/admin/analytics')
 @admin_required
@@ -607,7 +784,21 @@ def analytics():
         SELECT grade, COUNT(*) as count 
         FROM results 
         GROUP BY grade 
-        ORDER BY grade
+        ORDER BY 
+            CASE grade 
+                WHEN 'A' THEN 1 
+                WHEN 'A-' THEN 2 
+                WHEN 'B+' THEN 3 
+                WHEN 'B' THEN 4 
+                WHEN 'B-' THEN 5 
+                WHEN 'C+' THEN 6 
+                WHEN 'C' THEN 7 
+                WHEN 'C-' THEN 8 
+                WHEN 'D+' THEN 9 
+                WHEN 'D' THEN 10 
+                WHEN 'F' THEN 11 
+                ELSE 12 
+            END
     ''').fetchall()
     
     # Program statistics
@@ -633,7 +824,8 @@ def analytics():
                    WHEN grade = 'D+' THEN 1.3
                    WHEN grade = 'D' THEN 1.0
                    ELSE 0.0
-               END) as avg_gpa
+               END) as avg_gpa,
+               COUNT(*) as total_results
         FROM results 
         GROUP BY semester, academic_year 
         ORDER BY academic_year DESC, semester
@@ -643,23 +835,47 @@ def analytics():
     subject_performance = conn.execute('''
         SELECT course_name, course_code,
                COUNT(*) as total_students,
-               SUM(CASE WHEN grade IN ('F', 'E', 'D', 'D+') THEN 1 ELSE 0 END) as struggling_students
+               SUM(CASE WHEN grade IN ('F', 'D', 'D+') THEN 1 ELSE 0 END) as struggling_students,
+               AVG(CASE 
+                   WHEN grade = 'A' THEN 4.0
+                   WHEN grade = 'A-' THEN 3.7
+                   WHEN grade = 'B+' THEN 3.3
+                   WHEN grade = 'B' THEN 3.0
+                   WHEN grade = 'B-' THEN 2.7
+                   WHEN grade = 'C+' THEN 2.3
+                   WHEN grade = 'C' THEN 2.0
+                   WHEN grade = 'C-' THEN 1.7
+                   WHEN grade = 'D+' THEN 1.3
+                   WHEN grade = 'D' THEN 1.0
+                   ELSE 0.0
+               END) as avg_gpa
         FROM results
         GROUP BY course_name, course_code
-        ORDER BY struggling_students DESC
+        ORDER BY avg_gpa DESC
     ''').fetchall()
     
-    # Add struggle rate to subject performance data
-    course_difficulty = []
-    for course in subject_performance:
-        struggle_rate = (course['struggling_students'] / course['total_students']) * 100 if course['total_students'] > 0 else 0
-        course_difficulty.append({
-            'course_name': course['course_name'],
-            'course_code': course['course_code'],
-            'total_students': course['total_students'],
-            'struggling_students': course['struggling_students'],
-            'struggle_rate': round(struggle_rate, 1)
-        })
+    # Student performance overview
+    student_performance = conn.execute('''
+        SELECT s.student_id, s.full_name, s.program,
+               COUNT(r.id) as total_subjects,
+               AVG(CASE 
+                   WHEN r.grade = 'A' THEN 4.0
+                   WHEN r.grade = 'A-' THEN 3.7
+                   WHEN r.grade = 'B+' THEN 3.3
+                   WHEN r.grade = 'B' THEN 3.0
+                   WHEN r.grade = 'B-' THEN 2.7
+                   WHEN r.grade = 'C+' THEN 2.3
+                   WHEN r.grade = 'C' THEN 2.0
+                   WHEN r.grade = 'C-' THEN 1.7
+                   WHEN r.grade = 'D+' THEN 1.3
+                   WHEN r.grade = 'D' THEN 1.0
+                   ELSE 0.0
+               END) as gpa
+        FROM students s
+        LEFT JOIN results r ON s.student_id = r.student_id
+        GROUP BY s.student_id, s.full_name, s.program
+        ORDER BY gpa DESC
+    ''').fetchall()
     
     conn.close()
     
@@ -670,7 +886,8 @@ def analytics():
                          grade_distribution=grade_distribution,
                          program_stats=program_stats,
                          semester_stats=semester_stats,
-                         course_difficulty=course_difficulty,
+                         subject_performance=subject_performance,
+                         student_performance=student_performance,
                          subjects=SUBJECTS)
 
 @app.route('/admin/add_result', methods=['GET', 'POST'])
@@ -696,11 +913,14 @@ def add_result():
             conn.close()
             return render_template('add_result.html', subjects=SUBJECTS)
         
-        # Check if result already exists
-        existing = conn.execute('SELECT * FROM results WHERE student_id = ? AND course_code = ?', 
-                               (student_id, course_code)).fetchone()
+        # Check if result already exists for this student, course, semester, and year
+        existing = conn.execute('''
+            SELECT * FROM results 
+            WHERE student_id = ? AND course_code = ? AND semester = ? AND academic_year = ?
+        ''', (student_id, course_code, semester, academic_year)).fetchone()
+        
         if existing:
-            flash('Result for this course already exists for this student.', 'warning')
+            flash('Result for this course already exists for this student in the specified semester and year.', 'warning')
             conn.close()
             return render_template('add_result.html', subjects=SUBJECTS)
         
@@ -713,10 +933,19 @@ def add_result():
         conn.commit()
         conn.close()
         
-        flash('Result added successfully!', 'success')
-        return redirect(url_for('manage_results'))
+        flash(f'Result added successfully for {student["full_name"]}!', 'success')
+        
+        # Check if we should redirect to student view
+        redirect_to_student = request.form.get('redirect_to_student')
+        if redirect_to_student == 'true':
+            return redirect(url_for('view_student', student_id=student_id))
+        else:
+            return redirect(url_for('manage_results'))
     
-    return render_template('add_result.html', subjects=SUBJECTS)
+    # Pre-populate student_id if provided in query params
+    default_student_id = request.args.get('student_id', '')
+    
+    return render_template('add_result.html', subjects=SUBJECTS, default_student_id=default_student_id)
 
 @app.route('/admin/add_student', methods=['GET', 'POST'])
 @admin_required
@@ -740,6 +969,13 @@ def add_student():
             conn.close()
             return render_template('add_student.html')
         
+        # Check if email already exists
+        existing_email = conn.execute('SELECT * FROM students WHERE email = ?', (email,)).fetchone()
+        if existing_email:
+            flash('Email already exists.', 'danger')
+            conn.close()
+            return render_template('add_student.html')
+        
         # Insert new student
         conn.execute('''
             INSERT INTO students (student_id, full_name, email, program, year, date_of_birth, phone_number, address)
@@ -747,19 +983,21 @@ def add_student():
         ''', (student_id, full_name, email, program, year, date_of_birth, phone_number, address))
         
         # Also create a user account for the student
+        default_password = 'password123'
         conn.execute('''
             INSERT INTO users (username, password, role, full_name, email)
             VALUES (?, ?, ?, ?, ?)
-        ''', (student_id, generate_password_hash('password123'), 'student', full_name, email))
+        ''', (student_id, generate_password_hash(default_password), 'student', full_name, email))
         
         conn.commit()
         conn.close()
         
-        flash('Student added successfully! Default password is "password123"', 'success')
+        flash(f'Student {full_name} added successfully! Default password is "{default_password}"', 'success')
         return redirect(url_for('manage_students'))
     
     return render_template('add_student.html')
 
+# Student Routes
 @app.route('/student/dashboard')
 @student_required
 def student_dashboard():
@@ -769,33 +1007,12 @@ def student_dashboard():
     results = conn.execute('''
         SELECT * FROM results 
         WHERE student_id = ? 
-        ORDER BY academic_year DESC, semester
+        ORDER BY academic_year DESC, semester DESC, course_code
     ''', (session['student_id'],)).fetchall()
     
     # Calculate GPA
-    grade_points = 0
-    total_credits = 0
-    for result in results:
-        credit = result['credits']
-        grade = result['grade']
-        
-        # Convert grade to points
-        if grade == 'A': points = 4.0
-        elif grade == 'A-': points = 3.7
-        elif grade == 'B+': points = 3.3
-        elif grade == 'B': points = 3.0
-        elif grade == 'B-': points = 2.7
-        elif grade == 'C+': points = 2.3
-        elif grade == 'C': points = 2.0
-        elif grade == 'C-': points = 1.7
-        elif grade == 'D+': points = 1.3
-        elif grade == 'D': points = 1.0
-        else: points = 0.0
-        
-        grade_points += points * credit
-        total_credits += credit
-    
-    gpa = round(grade_points / total_credits, 2) if total_credits > 0 else 0
+    gpa = calculate_gpa(results)
+    total_credits = sum(r['credits'] or 0 for r in results)
     
     # Get uploaded documents
     documents = conn.execute('''
@@ -828,8 +1045,17 @@ def upload_document():
             return redirect(request.url)
         
         if file:
+            # Check file extension
+            allowed_extensions = {'pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'txt'}
+            file_extension = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
+            
+            if file_extension not in allowed_extensions:
+                flash('File type not allowed. Please upload PDF, DOC, DOCX, JPG, PNG, or TXT files only.', 'danger')
+                return redirect(request.url)
+            
             # Secure filename and create path
-            filename = f"{session['student_id']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.filename}"
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f"{session['student_id']}_{timestamp}_{file.filename}"
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
             
@@ -861,6 +1087,64 @@ def submit_query():
     
     return render_template('submit_query.html')
 
+@app.route('/student/results')
+@student_required
+def student_results():
+    """Student view of their own results"""
+    conn = get_db_connection()
+    
+    # Get student results with filtering options
+    year_filter = request.args.get('year', '')
+    semester_filter = request.args.get('semester', '')
+    
+    query = 'SELECT * FROM results WHERE student_id = ?'
+    params = [session['student_id']]
+    
+    if year_filter:
+        query += ' AND academic_year = ?'
+        params.append(year_filter)
+    
+    if semester_filter:
+        query += ' AND semester = ?'
+        params.append(semester_filter)
+    
+    query += ' ORDER BY academic_year DESC, semester DESC, course_code'
+    
+    results = conn.execute(query, params).fetchall()
+    
+    # Get filter options
+    years = conn.execute('''
+        SELECT DISTINCT academic_year 
+        FROM results 
+        WHERE student_id = ? 
+        ORDER BY academic_year DESC
+    ''', (session['student_id'],)).fetchall()
+    
+    semesters = conn.execute('''
+        SELECT DISTINCT semester 
+        FROM results 
+        WHERE student_id = ? 
+        ORDER BY semester
+    ''', (session['student_id'],)).fetchall()
+    
+    # Calculate statistics
+    gpa = calculate_gpa(results)
+    total_credits = sum(r['credits'] or 0 for r in results)
+    
+    conn.close()
+    
+    return render_template('student_results.html',
+                          results=results,
+                          years=years,
+                          semesters=semesters,
+                          gpa=gpa,
+                          total_credits=total_credits,
+                          current_filters={
+                              'year': year_filter,
+                              'semester': semester_filter
+                          })
+
+# Utility Routes
 @app.route('/download/<int:doc_id>')
 @login_required
 def download_document(doc_id):
@@ -871,35 +1155,105 @@ def download_document(doc_id):
     if document:
         # Check if user has permission to download
         if session['role'] == 'admin' or (session['role'] == 'student' and document['student_id'] == session['student_id']):
-            return send_file(document['doc_path'], as_attachment=True, download_name=document['doc_name'])
+            try:
+                return send_file(document['doc_path'], as_attachment=True, download_name=document['doc_name'])
+            except FileNotFoundError:
+                flash('File not found on server.', 'danger')
+        else:
+            flash('Access denied.', 'danger')
+    else:
+        flash('Document not found.', 'danger')
     
-    flash('Document not found or access denied.', 'danger')
     return redirect(url_for('student_dashboard' if session['role'] == 'student' else 'admin_dashboard'))
 
+# API Routes for AJAX calls
+@app.route('/api/student/<student_id>')
+@admin_required
+def get_student_info(student_id):
+    """API endpoint to get student information"""
+    conn = get_db_connection()
+    student = conn.execute('SELECT * FROM students WHERE student_id = ?', (student_id,)).fetchone()
+    conn.close()
+    
+    if student:
+        return jsonify({
+            'success': True,
+            'student': dict(student)
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'message': 'Student not found'
+        })
+
+@app.route('/api/subjects/<subject_category>')
+@admin_required
+def get_subject_levels(subject_category):
+    """API endpoint to get subject levels for a category"""
+    if subject_category in SUBJECTS:
+        return jsonify({
+            'success': True,
+            'levels': SUBJECTS[subject_category]
+        })
+    else:
+        return jsonify({
+            'success': False,
+            'message': 'Subject category not found'
+        })
+
+# Debug and Utility Routes
 @app.route('/reset-db')
 def reset_db():
-    # Delete the existing database file
+    """Reset database - USE WITH CAUTION"""
     import os
     if os.path.exists('results.db'):
         os.remove('results.db')
     
-    # Reinitialize the database
     init_db()
     
     return "Database reset successfully! <a href='/'>Go to homepage</a>"
 
 @app.route('/debug/users')
 def debug_users():
+    """Debug route to show all users"""
     conn = get_db_connection()
     users = conn.execute('SELECT * FROM users').fetchall()
     conn.close()
     
-    result = "<h1>Users in Database</h1><table border='1'><tr><th>ID</th><th>Username</th><th>Password Hash</th><th>Role</th><th>Full Name</th></tr>"
+    result = "<h1>Users in Database</h1><table border='1'><tr><th>ID</th><th>Username</th><th>Role</th><th>Full Name</th><th>Email</th></tr>"
     for user in users:
-        result += f"<tr><td>{user['id']}</td><td>{user['username']}</td><td>{user['password']}</td><td>{user['role']}</td><td>{user['full_name']}</td></tr>"
+        result += f"<tr><td>{user['id']}</td><td>{user['username']}</td><td>{user['role']}</td><td>{user['full_name']}</td><td>{user['email']}</td></tr>"
     result += "</table>"
     
     return result
+
+@app.route('/debug/students')
+def debug_students():
+    """Debug route to show all students"""
+    conn = get_db_connection()
+    students = conn.execute('SELECT * FROM students').fetchall()
+    conn.close()
+    
+    result = "<h1>Students in Database</h1><table border='1'><tr><th>ID</th><th>Student ID</th><th>Full Name</th><th>Email</th><th>Program</th></tr>"
+    for student in students:
+        result += f"<tr><td>{student['id']}</td><td>{student['student_id']}</td><td>{student['full_name']}</td><td>{student['email']}</td><td>{student['program']}</td></tr>"
+    result += "</table>"
+    
+    return result
+
+# Error Handlers
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('errors/404.html'), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return render_template('errors/500.html'), 500
+
+@app.errorhandler(413)
+def too_large(error):
+    flash('File too large. Maximum file size is 16MB.', 'danger')
+    return redirect(request.url)
 
 if __name__ == '__main__':
     app.run(debug=True)
